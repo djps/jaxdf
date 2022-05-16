@@ -1,4 +1,6 @@
 
+import inspect
+import types
 from functools import wraps
 from typing import Callable
 
@@ -13,26 +15,81 @@ debug_config ={
   "debug_dispatch": False,
 }
 
-def _operator(evaluate, precedence):
+def _no_params_init(*args, **kwargs):
+  return None
+
+def _operator(evaluate, init_params, precedence):
+  # Get the signature of the function evaluate
+  sig = inspect.signature(evaluate)
+
+  # The following function standardizes the inputs of the function evaluate
+  def _standardize_inputs(*args, **kwargs):
+    # Map the args to the correct input keys using the signature, if
+    # they exist
+    num_args = len(args)
+    if num_args > 0:
+      in_kwargs = {
+        k: v for k, v in zip(list(sig.parameters.keys())[:num_args], args)
+      }
+
+    # Add the kwargs to the mapped args, if they exist
+    if len(kwargs) > 0:
+      in_kwargs.update(kwargs)
+
+    # Sort the parameters like in the signature
+    in_kwargs = {k: in_kwargs[k] for k in sig.parameters.keys() if k in in_kwargs}
+    return in_kwargs
+
+  @wraps(init_params)
+  def _initialize_parameters(*args, **kwargs):
+    # Standardize inputs
+    in_kwargs = _standardize_inputs(*args, **kwargs)
+
+    # Remove `params` from the input arguments, if it exists
+    if 'params' in in_kwargs:
+      del in_kwargs['params']
+
+    # Initialize the parameters using the init_params function
+    params = init_params(**in_kwargs)
+    return params
+
   @wraps(evaluate)
   def wrapper(*args, **kwargs):
-    outs = evaluate(*args, **kwargs)
-    if isinstance(outs, tuple) and len(outs) > 1:
-      # Overload the field class with an extra attribute
-      field = outs[0]
-      field._op_params = outs[1]
+    in_kwargs = _standardize_inputs(*args, **kwargs)
+
+    # Check if `params` is in the input arguments and it is not None
+    if 'params' in in_kwargs and in_kwargs['params'] is not None:
+      outs = evaluate(**kwargs)
     else:
-      field = outs
+      in_kwargs['params'] = _initialize_parameters(*args, **kwargs)
+      # Call the evaluate function with the updated parameters
+      outs = evaluate(**in_kwargs)
 
     if debug_config["debug_dispatch"]:
       print(f"Dispatching {evaluate.__name__} with for types {evaluate.__annotations__}")
 
-    return field
+    return outs
+  wrapper._initialize_parameters = _initialize_parameters
 
   f = _jaxdf_dispatch(wrapper, precedence=precedence)
+
+  # Add a new bound method to f, which inkes the wrapper.init_params function
+  # TODO: Make instead a new class from plum.function.Function, however check how the MIT license must propagate
+  # in that case
+  def _bound_init_params(self, *args, **kwargs):
+    sig_types = tuple([type(x) for x in args])
+    method, _ = self.resolve_method(*sig_types)
+    return method._initialize_parameters(*args, **kwargs)
+
+  f.init_params = types.MethodType(_bound_init_params, f)
+
   return f
 
-def operator(evaluate: Callable = None, precedence: int = 0):
+def operator(
+  evaluate: Callable = None,
+  init_params: Callable = _no_params_init,
+  precedence: int = 0
+) -> Callable:
   r'''Decorator for defining operators using multiple dispatch. The type annotation of the
   `evaluate` function are used to determine the dispatch rules.
 
@@ -67,10 +124,10 @@ def operator(evaluate: Callable = None, precedence: int = 0):
   if evaluate is None:
     # Returns the decorator
     def decorator(evaluate):
-      return _operator(evaluate, precedence)
+      return _operator(evaluate, init_params, precedence)
     return decorator
   else:
-    return _operator(evaluate, precedence)
+    return _operator(evaluate, init_params, precedence)
 
 
 def new_discretization(cls):
@@ -147,6 +204,9 @@ class Field(object):
   def __add__(self, other):
     return __add__(self, other)
 
+  def __divmod__(self, other):
+    return __divmod__(self, other)
+
   def __radd__(self, other):
     return __radd__(self, other)
 
@@ -179,6 +239,10 @@ class Field(object):
 
 @operator
 def __add__(self, other, params=None):
+  raise NotImplementedError(f"Function not implemented for {type(self)} and {type(other)}")
+
+@operator
+def __divmod__(self, other, params=None):
   raise NotImplementedError(f"Function not implemented for {type(self)} and {type(other)}")
 
 @operator

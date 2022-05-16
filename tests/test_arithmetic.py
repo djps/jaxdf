@@ -1,74 +1,141 @@
-import jax
 import numpy as np
+import pytest
 from jax import jit
 
 from jaxdf import *
 
 ATOL=1e-6
 
-domain = geometry.Domain()
+## Fixtures
+@pytest.fixture
+def init_geometry():
+  N = (64,64)
+  dx = (1.0, 1.0)
+  domain = geometry.Domain(N, dx)
+  return domain, N
 
-# Fields on grid
-x = OnGrid(jnp.asarray([1.0]), domain)
-y = OnGrid(jnp.asarray([2.0]), domain)
+@pytest.fixture
+def fourier_scalar_field(init_geometry):
+  domain, N = init_geometry
+  N_new = tuple(list(N) + [1,])
+  params = jnp.ones(N_new)
+  return FourierSeries(params, domain)
 
-# Continuous fields
-def f(p, x):
-  return jnp.expand_dims(jnp.sum(p*(x**2)), -1)
-a = Continuous(5.0, domain, f)
-b = Continuous(6.0, domain, f)
+@pytest.fixture
+def continuous_scalar_field(init_geometry):
+  domain, N = init_geometry
+  def f(p, x):
+    return jnp.expand_dims(jnp.sum(p*(x**2)), -1)
+  params = 5.0
+  return Continuous(params, domain, f)
 
-def test_add():
-  z = x + y
-  assert z.params == 3.0
-  assert type(z) == OnGrid
+## Tests
+@pytest.mark.parametrize(
+  "op", [
+    lambda x, y: x + y,
+    lambda x, y: x - y,
+    lambda x, y: x * y,
+    lambda x, y: x / y,
+    lambda x, y: x ** y,
+    ]
+  )
+def test_if_arithmetic_runs_fourier(fourier_scalar_field, op):
+  u = fourier_scalar_field
+  v = fourier_scalar_field
+  # Testing without jitting
+  z = op(u, v)
 
-  z = x + 5.
-  assert z.params == 6.0
-
-def test_add_continuous():
-  z = a + b
-  z_val = z.get_field(domain.origin + 1)
-  print(z_val)
-  assert np.allclose(z_val, [22.])
-
-def test_jit_continuous():
+  # Testing with jitting
   @jit
-  def f(a, b):
-    return a + b
+  def jit_op(x, y):
+    return op(x, y)
+  z_jit = jit_op(u, v)
 
-  z = f(a,b)
+  # Check if they give the same answer
+  assert np.allclose(z.on_grid, z_jit.on_grid)
 
-def test_sub():
-  z = x - y
-  assert z.params == -1.0
-  assert type(z) == OnGrid
 
-  z = x - 2.0
-  assert z.params == -1.0
+@pytest.mark.parametrize(
+  "op", [
+    lambda x, y: x + y,
+    lambda x, y: x - y,
+    lambda x, y: x * y,
+    lambda x, y: x / y,
+    lambda x, y: x ** y,
+    ]
+  )
+def test_if_arithmetic_runs_fourier_num(fourier_scalar_field, op):
+  u = fourier_scalar_field
+  v = 1.0
+  # Testing without jitting
+  z = op(u, v)
+  q = op(v, u)
 
-def test_jit():
-
+  # Testing with jitting
   @jit
-  def prod(x, y):
-    return x + y
-  return prod(x, y)
+  def jit_op(x, y):
+    return op(x, y)
+  z_jit = jit_op(u, v)
+  q_jit = jit_op(v, u)
 
-def test_jit_with_float():
+  # Check if they give the same answer
+  assert np.allclose(z.on_grid, z_jit.on_grid)
+  assert np.allclose(q.on_grid, q_jit.on_grid)
+
+@pytest.mark.parametrize(
+  "op", [
+    lambda x, y: x + y,
+    lambda x, y: x - y,
+    lambda x, y: x * y,
+    lambda x, y: x / y,
+    lambda x, y: x ** y,
+    ]
+  )
+def test_if_arithmetic_runs_continuous(continuous_scalar_field, op):
+  u = continuous_scalar_field
+  v = continuous_scalar_field
+
+  # Testing without jitting
+  z = op(u, v)
+
+  # Testing with jitting
   @jit
-  def add(x, y):
-    return x + y * 10
+  def jit_op(x, y):
+    return op(x, y)
+  z_jit = jit_op(u, v)
 
-  _ = add(x,y)
-  _ = add(x, 6.0)
-  _ = add(-5.0, x)
-  _ = add(a,b)
+  # Check if they give the same answer
+  assert np.allclose(z.on_grid, z_jit.on_grid)
 
-if __name__ == '__main__':
-  with jax.checking_leaks():
-    test_add()
-    test_sub()
-    test_jit()
-    test_jit_with_float()
-    test_add_continuous()
-    test_jit_continuous()
+
+@pytest.mark.parametrize(
+  "op", [
+    lambda x, y: x + y,
+    lambda x, y: x - y,
+    lambda x, y: x * y,
+    lambda x, y: x / y,
+    lambda x, y: x ** y,
+    ]
+  )
+def test_if_arithmetic_runs_continuous_num(init_geometry, op):
+  domain, N = init_geometry
+  def f(p, x):
+    return jnp.expand_dims(jnp.sum(p*(x**2)), -1)
+  params = 5.0
+  u = Continuous(params, domain, f)
+
+  v = 1.0
+  # Testing without jitting
+  z = op(u, v)
+
+  # Testing with jitting
+  @jit
+  def jit_op(x, y):
+    return op(x, y)
+  z_jit = jit_op(u, v)
+
+  # Check if they give the same answer
+  assert np.allclose(z.on_grid, z_jit.on_grid)
+
+if __name__ == "__main__":
+  test_if_arithmetic_runs_continuous_num()
