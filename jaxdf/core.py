@@ -59,7 +59,7 @@ def _operator(evaluate, init_params, precedence):
 
     # Check if `params` is in the input arguments and it is not None
     if 'params' in in_kwargs and in_kwargs['params'] is not None:
-      outs = evaluate(**kwargs)
+      outs = evaluate(**in_kwargs)
     else:
       in_kwargs['params'] = _initialize_parameters(*args, **kwargs)
       # Call the evaluate function with the updated parameters

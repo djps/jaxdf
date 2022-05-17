@@ -30,6 +30,8 @@ def continuous_scalar_field(init_geometry):
   return Continuous(params, domain, f)
 
 ## Tests
+
+# Fourier with Fourier
 @pytest.mark.parametrize(
   "op", [
     lambda x, y: x + y,
@@ -54,7 +56,7 @@ def test_if_arithmetic_runs_fourier(fourier_scalar_field, op):
   # Check if they give the same answer
   assert np.allclose(z.on_grid, z_jit.on_grid)
 
-
+# Fourier with number
 @pytest.mark.parametrize(
   "op", [
     lambda x, y: x + y,
@@ -82,6 +84,7 @@ def test_if_arithmetic_runs_fourier_num(fourier_scalar_field, op):
   assert np.allclose(z.on_grid, z_jit.on_grid)
   assert np.allclose(q.on_grid, q_jit.on_grid)
 
+# Continuous with Continuous
 @pytest.mark.parametrize(
   "op", [
     lambda x, y: x + y,
@@ -107,7 +110,7 @@ def test_if_arithmetic_runs_continuous(continuous_scalar_field, op):
   # Check if they give the same answer
   assert np.allclose(z.on_grid, z_jit.on_grid)
 
-
+# Continuous with number
 @pytest.mark.parametrize(
   "op", [
     lambda x, y: x + y,
@@ -127,15 +130,18 @@ def test_if_arithmetic_runs_continuous_num(init_geometry, op):
   v = 1.0
   # Testing without jitting
   z = op(u, v)
+  q = op(v, u)
 
   # Testing with jitting
   @jit
   def jit_op(x, y):
     return op(x, y)
   z_jit = jit_op(u, v)
+  q_jit = jit_op(v, u)
 
   # Check if they give the same answer
   assert np.allclose(z.on_grid, z_jit.on_grid)
+  assert np.allclose(q.on_grid, q_jit.on_grid)
 
 if __name__ == "__main__":
   test_if_arithmetic_runs_continuous_num()
