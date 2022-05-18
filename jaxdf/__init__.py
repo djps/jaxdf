@@ -6,3 +6,4 @@ from jaxdf.discretization import *                      # isort:skip
 # Must be imported after discretization
 from jaxdf.operators.magic import *                     # isort:skip
 from jaxdf import operators                             # isort:skip
+from jaxdf import initializers                          # isort:skip

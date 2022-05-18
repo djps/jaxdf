@@ -4,7 +4,6 @@ from jax import jit
 
 from jaxdf import *
 
-ATOL=1e-6
 
 ## Fixtures
 @pytest.fixture
@@ -142,6 +141,3 @@ def test_if_arithmetic_runs_continuous_num(init_geometry, op):
   # Check if they give the same answer
   assert np.allclose(z.on_grid, z_jit.on_grid)
   assert np.allclose(q.on_grid, q_jit.on_grid)
-
-if __name__ == "__main__":
-  test_if_arithmetic_runs_continuous_num()
