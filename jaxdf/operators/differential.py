@@ -1,6 +1,7 @@
 import jax
 from findiff import coefficients as findif_coeff
 from jax import numpy as jnp
+from jax import scipy as jsp
 
 from jaxdf.core import operator
 from jaxdf.discretization import *
@@ -8,9 +9,46 @@ from jaxdf.initializers import *
 from jaxdf.util import get_ffts
 
 
+def _convolve_with_pad(
+  kernel,
+  array,
+  axis
+):
+  # Reflection padding the array where appropriate
+  pad_size = max(kernel.shape)//2
+  extra_pad = (pad_size,pad_size)
+  pad = [(0, 0)] * x.ndim
+  pad[axis] = extra_pad
+  f = jnp.pad(array, pad, mode="wrap")
+
+  # Apply kernel
+  out = jsp.signal.convolve(f, kernel, mode="valid")
+
+  return out
+
+# Derivative
+@operator(init_params=fd_derivative_init)
+def derivative(
+  x: FiniteDifferences,
+  axis=0,
+  stagger = 0,
+  params=None
+):
+  kernel = params['fd_kernel']
+
+  # Getting data
+  array = x.on_grid[...,0]
+
+  # Apply kernel
+  out = _convolve_with_pad(kernel, array, axis)
+  out = jnp.expand_dims(out, axis=-1)
+
+  # Make it a field again
+  return x.replace_params(out)
+
 ## Diagonal of Jacobian
 @operator(init_params=get_kvec)
-def diag_jacobian(x: FourierSeries, params=None) -> FourierSeries:
+def diag_jacobian(x: FourierSeries, stagger = [0], params=None) -> FourierSeries:
   r'''Returns the diagonal of the Jacobian of a Fourier series.
 
   Args:
@@ -46,6 +84,23 @@ def diag_jacobian(x: FourierSeries, params=None) -> FourierSeries:
 
   return FourierSeries(new_params, x.domain)
 
+@operator(init_params=ft_diag_jacobian_init)
+def diag_jacobian(
+  x: FiniteDifferences,
+  stagger = [0],
+  params = None
+) -> FiniteDifferences:
+  # Checking inputs
+  assert x.domain.ndim == x.dims # Diagonal jackobian only works on vector fields of the same dimension as the domain
+
+  kernels = params['fd_diag_jacobian']
+  array = x.on_grid
+
+  # Apply the corresponding kernel to each dimension
+  outs = [_convolve_with_pad(kernels[i], array[...,i]) for i in range(x.ndim)]
+  new_params = jnp.stack(outs, axis=-1)
+
+  return x.replace_params(new_params)
 
 ## Gradient
 @operator
@@ -58,7 +113,7 @@ def gradient(x: Continuous, params=None):
   return x.update_fun_and_params(x.params, grad_fun)
 
 @operator(init_params=get_kvec)
-def gradient(x: FourierSeries, params=None) -> FourierSeries:
+def gradient(x: FourierSeries, stagger = [0], params=None) -> FourierSeries:
   r'''Returns the gradient of a Fourier series.
 
   Args:
@@ -96,7 +151,7 @@ def gradient(x: FourierSeries, params=None) -> FourierSeries:
 
 ## Laplacian
 @operator(init_params=get_kvec)
-def laplacian(x: FourierSeries, params=None):
+def laplacian(x: FourierSeries, stagger = [0], params=None):
   r'''Returns the Laplacian of a Fourier series.
 
   Args:
