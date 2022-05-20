@@ -1,7 +1,6 @@
 import jax
 from findiff import coefficients as findif_coeff
 from jax import numpy as jnp
-from jax import scipy as jsp
 
 from jaxdf.core import operator
 from jaxdf.discretization import *
@@ -149,38 +148,6 @@ if __name__ == "__main__":
       return jnp.expand_dims(f_jac(p, coords)[0][0][axis], -1)
     return Continuous(x.params, x.domain, grad_fun), None
 
-  ## gradient
-  @operator
-  def gradient(x: Continuous, params=None):
-    get_x = x.aux['get_field']
-    def grad_fun(p, coords):
-      f_jac = jax.jacfwd(get_x, argnums=(1,))
-      v = f_jac(p, coords)[0]
-      return v
-    return x.update_fun_and_params(x.params, grad_fun), None
-
-
-  def _convolve_kernel(x, kernel):
-    # Make kernel the right size
-    extra_pad = (len(kernel) // 2, len(kernel) // 2)
-    for ax in range(x.ndim-1):
-      kernel = jnp.expand_dims(kernel, axis=0)  # Kernel on the last axis
-
-    # Convolve in each dimension
-    outs = []
-    img = x.params[...,0]
-    for i in range(x.ndim):
-      k = jnp.moveaxis(kernel, -1, i)
-
-      pad = [(0, 0)] * x.ndim
-      pad[i] = extra_pad
-      f = jnp.pad(img, pad, mode="constant")
-
-      out = jsp.signal.convolve(f, k, mode="valid")/x.domain.dx[i]
-      outs.append(out)
-
-    new_params = jnp.stack(outs, -1)
-    return new_params
 
   def _fd_coefficients(
     order: int = 1,
