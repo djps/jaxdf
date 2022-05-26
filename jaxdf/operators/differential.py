@@ -10,10 +10,23 @@ from jaxdf.util import get_ffts
 
 
 def _convolve_with_pad(
-  kernel,
-  array,
-  axis
-):
+  kernel: jnp.ndarray,
+  array: jnp.ndarray,
+  axis: int
+) -> jnp.ndarray:
+  r'''Convolves an array with a kernel, using reflection padding.
+
+  The kernel is supposed to be with the same number of indices as the array,
+  but the only dimension different than 1 corresponds to the axis. Padding
+  is only applied to such axis.
+
+  Parameters:
+    kernel (jnp.ndarray): The kernel to convolve with.
+    array (jnp.ndarray): The array to convolve.
+
+  Returns:
+    jnp.ndarray: The convolved array.
+  '''
   # Reflection padding the array where appropriate
   pad_size = max(kernel.shape)//2
   extra_pad = (pad_size,pad_size)
@@ -26,15 +39,16 @@ def _convolve_with_pad(
 
   return out
 
-# Derivative
+################## Derivative ##################
 @operator(init_params=fd_derivative_init)
 def derivative(
   x: FiniteDifferences,
+  *,
   axis=0,
-  stagger = 0,
+  stagger = [0],
   params=None
 ):
-  kernel = params['fd_kernel']
+  kernel = params
 
   # Getting data
   array = x.on_grid[...,0]
@@ -46,9 +60,14 @@ def derivative(
   # Make it a field again
   return x.replace_params(out)
 
-## Diagonal of Jacobian
+################## Diagonal of Jacobian ##################
 @operator(init_params=get_kvec)
-def diag_jacobian(x: FourierSeries, stagger = [0], params=None) -> FourierSeries:
+def diag_jacobian(
+  x: FourierSeries,
+  *,
+  stagger = [0],
+  params=None
+) -> FourierSeries:
   r'''Returns the diagonal of the Jacobian of a Fourier series.
 
   Args:
@@ -84,16 +103,18 @@ def diag_jacobian(x: FourierSeries, stagger = [0], params=None) -> FourierSeries
 
   return FourierSeries(new_params, x.domain)
 
+
 @operator(init_params=ft_diag_jacobian_init)
 def diag_jacobian(
   x: FiniteDifferences,
+  *,
   stagger = [0],
   params = None
 ) -> FiniteDifferences:
   # Checking inputs
   assert x.domain.ndim == x.dims # Diagonal jackobian only works on vector fields of the same dimension as the domain
 
-  kernels = params['fd_diag_jacobian']
+  kernels = params
   array = x.on_grid
 
   # Apply the corresponding kernel to each dimension
@@ -102,9 +123,9 @@ def diag_jacobian(
 
   return x.replace_params(new_params)
 
-## Gradient
+################## Gradient ##################
 @operator
-def gradient(x: Continuous, params=None):
+def gradient(x: Continuous, *, params=None):
   get_x = x.aux['get_field']
   def grad_fun(p, coords):
     f_jac = jax.jacfwd(get_x, argnums=(1,))
@@ -113,7 +134,12 @@ def gradient(x: Continuous, params=None):
   return x.update_fun_and_params(x.params, grad_fun)
 
 @operator(init_params=get_kvec)
-def gradient(x: FourierSeries, stagger = [0], params=None) -> FourierSeries:
+def gradient(
+  x: FourierSeries,
+  *,
+  stagger = [0],
+  params=None
+) -> FourierSeries:
   r'''Returns the gradient of a Fourier series.
 
   Args:
@@ -148,10 +174,14 @@ def gradient(x: FourierSeries, stagger = [0], params=None) -> FourierSeries:
 
   return FourierSeries(new_params, x.domain)
 
-
-## Laplacian
+################## Laplacian ##################
 @operator(init_params=get_kvec)
-def laplacian(x: FourierSeries, stagger = [0], params=None):
+def laplacian(
+  x: FourierSeries,
+  *,
+  stagger = [0],
+  params=None
+) -> FourierSeries:
   r'''Returns the Laplacian of a Fourier series.
 
   Args:

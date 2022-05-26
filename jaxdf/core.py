@@ -129,7 +129,6 @@ def operator(
   else:
     return _operator(evaluate, init_params, precedence)
 
-
 def new_discretization(cls):
   r'''Wrapper around `jax.tree_util.register_pytree_node_class` that can
   be used to register a new discretization.

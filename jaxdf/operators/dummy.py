@@ -3,14 +3,14 @@ from jaxdf.discretization import *
 
 
 @operator
-def dummy(x: OnGrid, params=None):
+def dummy(x: OnGrid, *, params=None):
   r'''A dummy operator that is useful for debugging.'''
   if params is None:
     params = {"k": 3}
   return params["k"]*x, params
 
 @operator
-def dummy(x: Continuous, params=None):
+def dummy(x: Continuous, *, params=None):
   if params is None:
     params = {"k": 3}
   get_x = x.aux['get_field']

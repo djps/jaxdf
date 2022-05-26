@@ -5,15 +5,41 @@ import numpy as np
 from jaxdf.discretization import *
 
 
-def filter_input(func, to_remove: list):
-    # Remove unwanted parameters
+def filter_input(func, to_remove: list) -> Callable:
+  r'''Removes unwanted inputs before calling a function. Useful for
+  generalizing initializers.
+
+  It requires the function to be called with keyword arguments, at
+  least for the ones to be removed.
+
+  Parameters:
+    func (Callable): Function to be filtered
+    to_remove (List[str]): List of strings identifying the named
+      arguments to be removed.
+
+  Returns:
+    Callable: Filtered function
+
+  !!! example
+    ```python
+    x = 1
+    y = 2
+
+    def func(x, y):
+      return x + y
+
+    filtered_func = filter_input(init_func, ['z'])
+
+    print(func(x, y)) # 3
+    print(filtered_func(x, y, z=10)) # 3
+    ```
+  '''
   @wraps(func)
   def _f(**kwargs):
     for key in to_remove:
-      kwargs.pop(key)
+      kwargs.pop(key) if key in kwargs.keys() else None
     return func(**kwargs)
   return _f
-
 
 def get_kvec(x: FourierSeries, stagger = [0]) -> dict:
   r'''Returns the k-vectors of a Fourier series,
@@ -139,7 +165,7 @@ def fd_derivative_init(
   # Add dx
   kernel = kernel / x.domain.dx[axis]
 
-  return {'fd_kernel': kernel}
+  return kernel
 
 def ft_diag_jacobian_init(
   x: FiniteDifferences,
@@ -150,6 +176,6 @@ def ft_diag_jacobian_init(
 
   kernels = []
   for i in range(x.domain.ndim):
-    kernels.append(fd_derivative_init(x, axis=i, stagger=stagger[i])['fd_kernel'])
+    kernels.append(fd_derivative_init(x, axis=i, stagger=stagger[i]))
 
-  return {'fd_diag_jacobian': kernels}
+  return kernels
