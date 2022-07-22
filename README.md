@@ -1,14 +1,14 @@
 # jaxdf - JAX-based Discretization Framework
 
-[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
-[![codecov](https://codecov.io/gh/ucl-bug/jaxdf/branch/main/graph/badge.svg?token=FIUYOCFDYL)](https://codecov.io/gh/ucl-bug/jaxdf)
-![Continous Integration](https://github.com/ucl-bug/jaxdf/actions/workflows/main.yml/badge.svg)
-[![Documentation](https://github.com/ucl-bug/jaxdf/actions/workflows/build_docs.yml/badge.svg)](https://ucl-bug.github.io/jaxdf/)
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0) ![Continous Integration](https://github.com/djps/jaxdf/actions/workflows/main.yml/badge.svg)
+<!-- [![codecov](https://codecov.io/gh/ucl-bug/jaxdf/branch/main/graph/badge.svg?token=FIUYOCFDYL)](https://codecov.io/gh/ucl-bug/jaxdf) -->
+
+<!-- [![Documentation](https://github.com/djps/jaxdf/actions/workflows/build_docs.yml/badge.svg)](https://djps.github.io/jaxdf/) -->
 
 [**Overview**](#overview)
 | [**Example**](#example)
 | [**Installation**](#installation)
-| [**Documentation**](https://ucl-bug.github.io/jaxdf/)
+| [**UCL Documentation**](https://ucl-bug.github.io/jaxdf/)
 
 ## ⚠️ This library is still in development. Breaking changes may occur.
 
@@ -89,7 +89,6 @@ This package will be presented at the [Differentiable Programming workshop](http
 
 <br/>
 
-#### Acknowledgements
 
 - Some of the packaging of this repository is done by editing [this templace from @rochacbruno](https://github.com/rochacbruno/python-project-template)
 - The multiple-dispatch method employed is based on `plum`: https://github.com/wesselb/plum
