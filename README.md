@@ -5,12 +5,10 @@
 
 <!-- [![Documentation](https://github.com/djps/jaxdf/actions/workflows/build_docs.yml/badge.svg)](https://djps.github.io/jaxdf/) -->
 
-[**Overview**](#overview)
-| [**Example**](#example)
-| [**Installation**](#installation)
-| [**UCL Documentation**](https://ucl-bug.github.io/jaxdf/)
-
-## ⚠️ This library is still in development. Breaking changes may occur.
+[Overview](#overview)
+| [Example](#example)
+| [Installation](#installation)
+| [**UCL** Documentation](https://ucl-bug.github.io/jaxdf/)
 
 <br/>
 
@@ -19,6 +17,11 @@
 jaxdf is a [JAX](https://jax.readthedocs.io/en/stable/)-based package defining a coding framework for writing differentiable numerical simulators with arbitrary discretizations.
 
 The intended use is to build numerical models of physical systems, such as wave propagation, or the numerical solution of partial differential equations, that are easy to customize to the user's research needs. Such models are pure functions that can be included into arbitray differentiable programs written in [JAX](https://jax.readthedocs.io/en/stable/): for example, they can be used as layers of neural networks, or to build a physics loss function.
+
+This is a branch fixed to use `jax==0.2.29` and `jaxlib==0.1.77` which was compiled on Windows 11 
+* Visual Studio 2019
+* Cuda 11.3
+* Cudnn 8.2.1
 
 <br/>
 
