@@ -93,7 +93,7 @@ This package will be presented at the [Differentiable Programming workshop](http
 <br/>
 
 
-- Some of the packaging of this repository is done by editing [this templace from @rochacbruno](https://github.com/rochacbruno/python-project-template)
+- Some of the packaging of this repository is done by editing [this](https://github.com/rochacbruno/python-project-template) templace from @rochacbruno
 - The multiple-dispatch method employed is based on `plum`: https://github.com/wesselb/plum
 
 #### Related projects
