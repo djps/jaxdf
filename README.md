@@ -18,7 +18,7 @@ jaxdf is a [JAX](https://jax.readthedocs.io/en/stable/)-based package defining a
 
 The intended use is to build numerical models of physical systems, such as wave propagation, or the numerical solution of partial differential equations, that are easy to customize to the user's research needs. Such models are pure functions that can be included into arbitray differentiable programs written in [JAX](https://jax.readthedocs.io/en/stable/): for example, they can be used as layers of neural networks, or to build a physics loss function.
 
-This is a branch fixed to use `jax==0.2.29` and `jaxlib==0.1.77` which was compiled on Windows 11 
+This is a branch fixed to use `jax==0.2.29` and `jaxlib==0.1.77` which was compiled on Windows 11 with
 * Visual Studio 2019 (version 16.11.16)
 * Cuda 11.3
 * cuDNN 8.2.1
