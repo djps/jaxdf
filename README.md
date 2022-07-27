@@ -99,8 +99,8 @@ This package will be presented at the [Differentiable Programming workshop](http
 - Some of the packaging of this repository is done by editing [this](https://github.com/rochacbruno/python-project-template) templace from @rochacbruno
 - The multiple-dispatch method employed is based on `plum`: https://github.com/wesselb/plum
 
-#### Related projects
+## Related projects
 
 1. [`odl`](https://github.com/odlgroup/odl) Operator Discretization Library (ODL) is a python library for fast prototyping focusing on (but not restricted to) inverse problems.
-3. [`deepXDE`](https://deepxde.readthedocs.io/en/latest/): a TensorFlow and PyTorch library for scientific machine learning.
-4. [`SciML`](https://sciml.ai/): SciML is a NumFOCUS sponsored open source software organization created to unify the packages for scientific machine learning.
+2. [`deepXDE`](https://deepxde.readthedocs.io/en/latest/): a TensorFlow and PyTorch library for scientific machine learning.
+3. [`SciML`](https://sciml.ai/): SciML is a NumFOCUS sponsored open source software organization created to unify the packages for scientific machine learning.
