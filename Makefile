@@ -78,9 +78,10 @@ show:             ## Show the current environment.
 
 .PHONY: test
 test:             ## Run tests and generate coverage report.
-	$(ENV_PREFIX)coverage run --source=jaxdf -m pytest
+	$(ENV_PREFIX)coverage run --source=jaxdf -m pytest -vs
 	$(ENV_PREFIX)coverage xml
 	$(ENV_PREFIX)coverage html
+	$(ENV_PREFIX)coverage lcov
 
 .PHONY: virtualenv
 virtualenv:       ## Create a virtual environment. Checks that python > 3.8
